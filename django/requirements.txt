@@ -1,0 +1,6 @@
+django==3.2
+coverage==5.2.1
+pyflakes==2.1.1
+pylint==2.4.4
+requests==2.22.0
+requests-mock==1.7.0

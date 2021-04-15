@@ -1,0 +1,129 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Numerated Coding Challenge</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'mbta/index.css' %}">
+  </head>
+  <body>
+    <form id='numerated_mbta' method="post">
+      <h1>Numerated Coding Challenge</h1>
+      <h2>Find the next departing train for a particular stop on the MBTA T network.</h2>
+      {% csrf_token %}
+      <div id='routes'>
+        <h3>Routes</h3>
+        {% for route in routes %}
+          <div>
+            <label title="{{ route.attributes.long_name }} ({{ route.attributes.fare_class }})"
+                   alt="{{ route.attributes.long_name }} ({{ route.attributes.fare_class }})">
+              <input type="radio" name="route_id" value="{{ route.id }}" />
+              {{ route.attributes.long_name }}
+            </label>
+            <label rel="{{ route.id }}">Direction:
+              <select name="direction_id" rel="{{ route.id }}">
+                {% for dir in route.attributes.direction_names %}
+                  <option value="{{ forloop.counter0 }}">{{ dir }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div id='stops'>
+        <h3>Stops</h3>
+        {% for stop in stops %}
+          <div>
+            <label title="{{ stop.attributes.address }}" alt="{{ stop.attributes.address }}" rel="{{ stop.id }}">
+              <input type="radio" name="stop_id" value="{{ stop.id }}" rel="{{ stop.id }}" />
+              {{ stop.attributes.name }}
+            </label>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div id='instructions'>
+        <h3>Instructions</h3>
+        <ul>
+          <li>Select a Route<br /> - available Stops will then be displayed</li>
+          <li>Select a Direction</li>
+          <li>Select a Stop</li>
+          <li>Click 'Next Departure'</li>
+        </ul>
+
+        <div id='output'>
+          <input type="submit" value="Next Departure" />
+          <br /><br />
+          <div id='departure_time'></div>
+        </div>
+
+      </div>
+    </form>
+
+    {% block javascript %}
+    <script>
+      function disableInputs() {
+        $('select[name=direction_id]').attr('disabled', true)
+        $('select[name=direction_id]').parent().hide()
+
+        $('input[name=stop_id]').attr('disabled', true)
+        $('#stops label').hide()
+      }
+      disableInputs()
+
+      $('input[name=route_id]').click(function (e){
+        disableInputs()
+        route_id = $(this).val()
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'stops_by_route' %}",
+            data: {
+              'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+              'route_id': route_id
+            },
+            success: function (response) {
+                // on successfull creating object
+                $(response.stops).each(function (index, stop){
+                  $('input[rel='+stop.id+']').attr('disabled', false)
+                  $('label[rel='+stop.id+']').show()
+                })
+            }})
+
+        $('select[rel='+route_id+']').attr('disabled', false)
+        $('select[rel='+route_id+']').parent().show()
+
+      })
+      /*
+          On submiting the form, send the POST ajax
+          request to server and after successfull submission
+          display the object.
+      */
+      $("#numerated_mbta").submit(function (e) {
+          // preventing from page reload and default actions
+          e.preventDefault();
+          // serialize the data for sending the form data.
+          var serializedData = $(this).serialize();
+          // make POST ajax call
+          $("#departure_time").html('');
+
+          $.ajax({
+              type: 'POST',
+              url: "{% url 'prediction' %}",
+              data: serializedData,
+              success: function (departure_time) {
+                  // on successfull creating object
+                  var date = new Date(Date.parse(departure_time))
+                  $("#departure_time").html(date.toLocaleString());
+              },
+              error: function (response) {
+                  // alert the error if any error occured
+                  alert(response.responseText);
+              }
+          })
+      })
+    </script>
+    {% endblock javascript %}
+  </body>
+</html>

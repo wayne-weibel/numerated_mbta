@@ -1,0 +1,39 @@
+
+form#numerated_mbta {
+  width: 85%;
+  margin: 10px auto 10px auto;
+}
+
+form#numerated_mbta div#routes {
+  float: left;
+  width: 50%;
+}
+
+form#numerated_mbta div#routes label {
+  width: 45%;
+  display: inline-block;
+}
+
+form#numerated_mbta div#stops {
+  float: left;
+  width: 25%;
+}
+
+form#numerated_mbta div#instructions {
+  float: left;
+  width: 25%;
+}
+
+form#numerated_mbta div#output {
+  margin-top: 20px;
+}
+
+form#numerated_mbta div#output input {
+  padding: 5px 10px;
+  font-size: large;
+}
+
+form#numerated_mbta div#output #departure_time {
+  font-weight: bold;
+  font-size: x-large;
+}
